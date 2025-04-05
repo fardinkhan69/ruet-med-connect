@@ -251,7 +251,7 @@ const Appointments = () => {
                             <div className="flex items-start space-x-4">
                               <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
                                 <img 
-                                  src={appointment.doctor?.imageUrl || "/placeholder.svg"} 
+                                  src={appointment.doctor?.imageurl || "/placeholder.svg"} 
                                   alt={appointment.doctor?.name || "Doctor"} 
                                   className="w-full h-full object-cover"
                                 />
@@ -340,7 +340,7 @@ const Appointments = () => {
                             <div className="flex items-start space-x-4">
                               <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
                                 <img 
-                                  src={appointment.doctor?.imageUrl || "/placeholder.svg"} 
+                                  src={appointment.doctor?.imageurl || "/placeholder.svg"} 
                                   alt={appointment.doctor?.name || "Doctor"} 
                                   className="w-full h-full object-cover"
                                 />
