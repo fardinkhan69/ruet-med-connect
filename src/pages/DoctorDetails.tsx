@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,6 +18,7 @@ import {
   Calendar as CalendarOutline,
   AlertCircle
 } from "lucide-react";
+import { mockDoctors } from "@/lib/types";
 
 interface DbTimeSlot {
   id: string;
@@ -65,6 +65,15 @@ const DoctorDetails = () => {
       try {
         if (!id) return;
         
+        if (/^\d+$/.test(id)) {
+          const mockDoctorIndex = parseInt(id) - 1;
+          if (mockDoctorIndex >= 0 && mockDoctorIndex < mockDoctors.length) {
+            setDoctor(mockDoctors[mockDoctorIndex]);
+            setLoading(false);
+            return;
+          }
+        }
+        
         const { data, error } = await supabase
           .from("doctors")
           .select("*")
@@ -75,12 +84,11 @@ const DoctorDetails = () => {
           throw error;
         }
         
-        // Map the database response to our Doctor type
         const doctorData: Doctor = {
           id: data.id,
           name: data.name,
           specialization: data.specialization,
-          imageurl: data.imageurl, // Field name now matches database
+          imageurl: data.imageurl,
           experience: data.experience,
           rating: data.rating,
           education: data.education,
@@ -111,6 +119,26 @@ const DoctorDetails = () => {
       
       try {
         const formattedDate = format(selectedDate, "yyyy-MM-dd");
+        
+        if (/^\d+$/.test(id)) {
+          const mockSlots = Array(8).fill(0).map((_, index) => {
+            const hour = Math.floor(index / 2) + 9;
+            const minute = (index % 2) === 0 ? '00' : '30';
+            const time = `${hour}:${minute}`;
+            
+            return {
+              id: `slot-${index + 1}`,
+              time,
+              date: formattedDate,
+              is_booked: Math.random() > 0.7,
+              doctor_id: id
+            };
+          });
+          
+          setTimeSlots(mockSlots);
+          setSlotsLoading(false);
+          return;
+        }
         
         const { data, error } = await supabase
           .from("time_slots")
@@ -188,7 +216,25 @@ const DoctorDetails = () => {
     setBookingInProgress(true);
 
     try {
-      // First update the time slot to mark it as booked
+      if (/^\d+$/.test(id)) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        toast({
+          title: "Success!",
+          description: "Your appointment has been booked successfully (demo mode)",
+        });
+        
+        const updatedTimeSlots = timeSlots.map(slot => 
+          slot.id === selectedSlot ? { ...slot, is_booked: true } : slot
+        );
+        setTimeSlots(updatedTimeSlots);
+        setSelectedSlot(null);
+        setReason("");
+        
+        navigate("/appointments");
+        return;
+      }
+      
       const { error: timeSlotError } = await supabase
         .from("time_slots")
         .update({ is_booked: true })
@@ -198,7 +244,6 @@ const DoctorDetails = () => {
         throw timeSlotError;
       }
 
-      // Then create the appointment
       const { error: appointmentError } = await supabase
         .from("appointments")
         .insert({
@@ -218,7 +263,6 @@ const DoctorDetails = () => {
         description: "Your appointment has been booked successfully",
       });
 
-      // Refresh time slots
       const updatedTimeSlots = timeSlots.map(slot => 
         slot.id === selectedSlot ? { ...slot, is_booked: true } : slot
       );
@@ -226,7 +270,6 @@ const DoctorDetails = () => {
       setSelectedSlot(null);
       setReason("");
 
-      // Redirect to appointments page
       navigate("/appointments");
     } catch (error) {
       console.error("Error booking appointment:", error);
@@ -298,7 +341,7 @@ const DoctorDetails = () => {
             <div className="w-full md:w-1/3">
               <div className="rounded-lg overflow-hidden bg-white shadow-md">
                 <img 
-                  src={doctor.imageurl} // Changed from imageUrl to imageurl
+                  src={doctor.imageurl}
                   alt={doctor.name}
                   className="w-full h-64 object-cover object-center" 
                 />
