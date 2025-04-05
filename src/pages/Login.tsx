@@ -1,131 +1,142 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Calendar, User, KeyRound } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import { Mail, Lock, AlertCircle } from "lucide-react";
 
 const Login = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { signIn } = useAuth();
+  const { toast } = useToast();
+  
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  
+  const from = location.state?.from || "/";
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setError("");
+    
+    if (!email || !password) {
+      setError("Please enter both email and password.");
+      return;
+    }
+    
+    setLoading(true);
     
     try {
-      // Here we'll integrate Supabase authentication later
-      console.log("Login submitted:", { email, password, rememberMe });
+      const { error } = await signIn(email, password);
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (error) {
+        setError(error.message);
+        return;
+      }
       
-      // Redirect to dashboard after successful login
-      window.location.href = "/";
-    } catch (error) {
-      console.error("Login error:", error);
+      toast({
+        title: "Login Successful",
+        description: "You have been successfully logged in.",
+      });
+      
+      navigate(from);
+    } catch (err) {
+      console.error("Login error:", err);
+      setError("An unexpected error occurred. Please try again.");
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
   
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <div className="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-50">
-        <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-md">
-          <div className="text-center">
-            <div className="flex justify-center">
-              <span className="bg-primary text-white p-2 rounded-full">
-                <Calendar size={24} />
-              </span>
-            </div>
-            <h2 className="mt-4 text-3xl font-bold text-gray-900">Welcome back</h2>
-            <p className="mt-2 text-sm text-gray-600">
-              Sign in to your account to manage appointments
+      <main className="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-50">
+        <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow">
+          <div>
+            <h2 className="text-center text-3xl font-extrabold text-gray-900">
+              Sign in to your account
+            </h2>
+            <p className="mt-2 text-center text-sm text-gray-600">
+              Or{" "}
+              <Link to="/register" className="font-medium text-primary hover:text-primary/80">
+                create a new account
+              </Link>
             </p>
           </div>
+          
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative flex items-center" role="alert">
+              <AlertCircle className="h-5 w-5 mr-2" />
+              <span>{error}</span>
+            </div>
+          )}
           
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
             <div className="space-y-4">
               <div>
                 <Label htmlFor="email">Email address</Label>
                 <div className="mt-1 relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                    <Mail className="h-5 w-5" />
+                  </div>
                   <Input
                     id="email"
-                    name="email"
                     type="email"
-                    autoComplete="email"
-                    required
+                    placeholder="you@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="pl-10"
-                    placeholder="Enter your email"
+                    required
                   />
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
                 </div>
               </div>
               
               <div>
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
-                  <Link to="/forgot-password" className="text-sm font-medium text-primary hover:text-primary/90">
-                    Forgot password?
-                  </Link>
-                </div>
+                <Label htmlFor="password">Password</Label>
                 <div className="mt-1 relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                    <Lock className="h-5 w-5" />
+                  </div>
                   <Input
                     id="password"
-                    name="password"
                     type="password"
-                    autoComplete="current-password"
-                    required
+                    placeholder="•••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="pl-10"
-                    placeholder="••••••••"
+                    required
                   />
-                  <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
                 </div>
               </div>
-              
-              <div className="flex items-center">
-                <Checkbox
-                  id="remember-me"
-                  checked={rememberMe}
-                  onCheckedChange={(checked) => 
-                    setRememberMe(checked === true)
-                  }
-                />
-                <Label htmlFor="remember-me" className="ml-2 text-sm text-gray-600">
-                  Remember me
-                </Label>
+            </div>
+
+            <div className="flex items-center justify-end">
+              <div className="text-sm">
+                <Link to="#" className="font-medium text-primary hover:text-primary/80">
+                  Forgot your password?
+                </Link>
               </div>
             </div>
-            
-            <Button 
-              type="submit" 
-              className="w-full bg-primary hover:bg-primary/90"
-              disabled={isLoading}
+
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full"
             >
-              {isLoading ? "Signing in..." : "Sign in"}
+              {loading ? "Signing in..." : "Sign in"}
             </Button>
-            
-            <div className="text-center text-sm">
-              <span className="text-gray-600">Don't have an account?</span>{" "}
-              <Link to="/register" className="font-medium text-primary hover:underline">
-                Create one now
-              </Link>
-            </div>
           </form>
         </div>
-      </div>
+      </main>
       <Footer />
     </div>
   );

@@ -9,7 +9,168 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      appointments: {
+        Row: {
+          created_at: string
+          doctor_id: string
+          follow_up: boolean
+          id: string
+          notes: string | null
+          patient_id: string
+          reason: string
+          status: string
+          time_slot_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          doctor_id: string
+          follow_up?: boolean
+          id?: string
+          notes?: string | null
+          patient_id: string
+          reason: string
+          status?: string
+          time_slot_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          doctor_id?: string
+          follow_up?: boolean
+          id?: string
+          notes?: string | null
+          patient_id?: string
+          reason?: string
+          status?: string
+          time_slot_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_doctor_id_fkey"
+            columns: ["doctor_id"]
+            isOneToOne: false
+            referencedRelation: "doctors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_time_slot_id_fkey"
+            columns: ["time_slot_id"]
+            isOneToOne: false
+            referencedRelation: "time_slots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      doctors: {
+        Row: {
+          about: string
+          created_at: string
+          education: string
+          experience: number
+          id: string
+          imageurl: string
+          name: string
+          rating: number
+          specialization: string
+        }
+        Insert: {
+          about: string
+          created_at?: string
+          education: string
+          experience: number
+          id?: string
+          imageurl: string
+          name: string
+          rating: number
+          specialization: string
+        }
+        Update: {
+          about?: string
+          created_at?: string
+          education?: string
+          experience?: number
+          id?: string
+          imageurl?: string
+          name?: string
+          rating?: number
+          specialization?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          date_of_birth: string | null
+          full_name: string | null
+          gender: string | null
+          id: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date_of_birth?: string | null
+          full_name?: string | null
+          gender?: string | null
+          id: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date_of_birth?: string | null
+          full_name?: string | null
+          gender?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      time_slots: {
+        Row: {
+          created_at: string
+          date: string
+          doctor_id: string
+          id: string
+          is_booked: boolean
+          time: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          doctor_id: string
+          id?: string
+          is_booked?: boolean
+          time: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          doctor_id?: string
+          id?: string
+          is_booked?: boolean
+          time?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "time_slots_doctor_id_fkey"
+            columns: ["doctor_id"]
+            isOneToOne: false
+            referencedRelation: "doctors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

@@ -1,17 +1,11 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { 
-  Calendar, 
-  User, 
-  KeyRound, 
-  Phone,
-  CalendarDays
-} from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -21,225 +15,235 @@ import {
 } from "@/components/ui/select";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import { Mail, Lock, User, AlertCircle, Calendar, Phone } from "lucide-react";
 
 const Register = () => {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    dateOfBirth: "",
-    gender: "",
-    password: "",
-    confirmPassword: "",
-  });
-  const [agreeToTerms, setAgreeToTerms] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+  const { signUp } = useAuth();
+  const { toast } = useToast();
   
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-  
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [phone, setPhone] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [gender, setGender] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setError("");
+    
+    // Basic validation
+    if (!name || !email || !password) {
+      setError("Please fill out all required fields.");
+      return;
+    }
+    
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+    
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters.");
+      return;
+    }
+    
+    setLoading(true);
     
     try {
-      // Here we'll integrate Supabase registration later
-      console.log("Registration submitted:", formData, agreeToTerms);
+      const userData = {
+        name,
+        phone,
+        date_of_birth: dateOfBirth,
+        gender,
+      };
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const { error } = await signUp(email, password, userData);
       
-      // Redirect after successful registration
-      window.location.href = "/";
-    } catch (error) {
-      console.error("Registration error:", error);
+      if (error) {
+        setError(error.message);
+        return;
+      }
+      
+      toast({
+        title: "Registration Successful",
+        description: "Your account has been created. You can now sign in.",
+      });
+      
+      navigate("/login");
+    } catch (err) {
+      console.error("Registration error:", err);
+      setError("An unexpected error occurred. Please try again.");
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
   
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <div className="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-50">
-        <div className="max-w-lg w-full space-y-8 bg-white p-8 rounded-lg shadow-md">
-          <div className="text-center">
-            <div className="flex justify-center">
-              <span className="bg-primary text-white p-2 rounded-full">
-                <Calendar size={24} />
-              </span>
-            </div>
-            <h2 className="mt-4 text-3xl font-bold text-gray-900">Create an account</h2>
-            <p className="mt-2 text-sm text-gray-600">
-              Register to book appointments with our doctors
+      <main className="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-50">
+        <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow">
+          <div>
+            <h2 className="text-center text-3xl font-extrabold text-gray-900">
+              Create a new account
+            </h2>
+            <p className="mt-2 text-center text-sm text-gray-600">
+              Or{" "}
+              <Link to="/login" className="font-medium text-primary hover:text-primary/80">
+                sign in to your existing account
+              </Link>
             </p>
           </div>
           
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative flex items-center" role="alert">
+              <AlertCircle className="h-5 w-5 mr-2" />
+              <span>{error}</span>
+            </div>
+          )}
+          
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
               <div>
-                <Label htmlFor="name">Full Name</Label>
+                <Label htmlFor="name">Full Name <span className="text-red-500">*</span></Label>
                 <div className="mt-1 relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                    <User className="h-5 w-5" />
+                  </div>
                   <Input
                     id="name"
-                    name="name"
                     type="text"
-                    required
-                    value={formData.name}
-                    onChange={handleChange}
+                    placeholder="John Doe"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
                     className="pl-10"
-                    placeholder="Enter your full name"
+                    required
                   />
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
                 </div>
               </div>
               
               <div>
-                <Label htmlFor="email">Email address</Label>
+                <Label htmlFor="email">Email address <span className="text-red-500">*</span></Label>
                 <div className="mt-1 relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                    <Mail className="h-5 w-5" />
+                  </div>
                   <Input
                     id="email"
-                    name="email"
                     type="email"
-                    autoComplete="email"
-                    required
-                    value={formData.email}
-                    onChange={handleChange}
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     className="pl-10"
-                    placeholder="Enter your email"
+                    required
                   />
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
                 </div>
               </div>
               
               <div>
                 <Label htmlFor="phone">Phone Number</Label>
                 <div className="mt-1 relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                    <Phone className="h-5 w-5" />
+                  </div>
                   <Input
                     id="phone"
-                    name="phone"
                     type="tel"
-                    value={formData.phone}
-                    onChange={handleChange}
+                    placeholder="+1 (555) 123-4567"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
                     className="pl-10"
-                    placeholder="Enter your phone number"
                   />
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="dob">Date of Birth</Label>
+                  <div className="mt-1 relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                      <Calendar className="h-5 w-5" />
+                    </div>
+                    <Input
+                      id="dob"
+                      type="date"
+                      value={dateOfBirth}
+                      onChange={(e) => setDateOfBirth(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <Label htmlFor="gender">Gender</Label>
+                  <Select
+                    value={gender}
+                    onValueChange={(value) => setGender(value)}
+                  >
+                    <SelectTrigger id="gender" className="w-full">
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="male">Male</SelectItem>
+                      <SelectItem value="female">Female</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               
               <div>
-                <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                <Label htmlFor="password">Password <span className="text-red-500">*</span></Label>
                 <div className="mt-1 relative">
-                  <Input
-                    id="dateOfBirth"
-                    name="dateOfBirth"
-                    type="date"
-                    value={formData.dateOfBirth}
-                    onChange={handleChange}
-                    className="pl-10"
-                  />
-                  <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
-                </div>
-              </div>
-              
-              <div>
-                <Label htmlFor="gender">Gender</Label>
-                <Select 
-                  onValueChange={(value) => handleSelectChange("gender", value)}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select gender" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="male">Male</SelectItem>
-                    <SelectItem value="female">Female</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <Label htmlFor="password">Password</Label>
-                <div className="mt-1 relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                    <Lock className="h-5 w-5" />
+                  </div>
                   <Input
                     id="password"
-                    name="password"
                     type="password"
-                    required
-                    value={formData.password}
-                    onChange={handleChange}
+                    placeholder="•••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     className="pl-10"
-                    placeholder="••••••••"
+                    required
                   />
-                  <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
                 </div>
               </div>
               
               <div>
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Label htmlFor="confirmPassword">Confirm Password <span className="text-red-500">*</span></Label>
                 <div className="mt-1 relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                    <Lock className="h-5 w-5" />
+                  </div>
                   <Input
                     id="confirmPassword"
-                    name="confirmPassword"
                     type="password"
-                    required
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
+                    placeholder="•••••••••"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
                     className="pl-10"
-                    placeholder="••••••••"
+                    required
                   />
-                  <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
                 </div>
               </div>
             </div>
-            
-            <div>
-              <div className="flex items-center">
-                <Checkbox
-                  id="terms"
-                  checked={agreeToTerms}
-                  onCheckedChange={(checked) => 
-                    setAgreeToTerms(checked === true)
-                  }
-                  required
-                />
-                <Label htmlFor="terms" className="ml-2 text-sm text-gray-600">
-                  I agree to the{" "}
-                  <Link to="/terms" className="text-primary hover:underline">
-                    Terms of Service
-                  </Link>{" "}
-                  and{" "}
-                  <Link to="/privacy" className="text-primary hover:underline">
-                    Privacy Policy
-                  </Link>
-                </Label>
-              </div>
-            </div>
-            
-            <Button 
-              type="submit" 
-              className="w-full bg-primary hover:bg-primary/90"
-              disabled={isLoading || !agreeToTerms}
+
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full"
             >
-              {isLoading ? "Creating account..." : "Create Account"}
+              {loading ? "Creating Account..." : "Create Account"}
             </Button>
-            
-            <div className="text-center text-sm">
-              <span className="text-gray-600">Already have an account?</span>{" "}
-              <Link to="/login" className="font-medium text-primary hover:underline">
-                Sign in
-              </Link>
-            </div>
           </form>
         </div>
-      </div>
+      </main>
       <Footer />
     </div>
   );
