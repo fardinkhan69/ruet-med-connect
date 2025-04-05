@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -30,11 +31,12 @@ import {
   TabsTrigger
 } from "@/components/ui/tabs";
 
+// Updated interfaces to match database structure
 interface Doctor {
   id: string;
   name: string;
   specialization: string;
-  imageUrl: string;
+  imageurl: string; // Changed from imageUrl to match database
 }
 
 interface TimeSlot {
@@ -48,7 +50,7 @@ interface Appointment {
   patient_id: string;
   doctor_id: string;
   time_slot_id: string;
-  status: "scheduled" | "completed" | "cancelled";
+  status: string; // Changed from union type to string
   reason: string;
   notes?: string;
   follow_up: boolean;
@@ -78,7 +80,7 @@ const Appointments = () => {
           .from("appointments")
           .select(`
             *,
-            doctor:doctor_id (id, name, specialization, imageUrl),
+            doctor:doctor_id (id, name, specialization, imageurl),
             time_slot:time_slot_id (id, date, time)
           `)
           .eq("patient_id", user.id)

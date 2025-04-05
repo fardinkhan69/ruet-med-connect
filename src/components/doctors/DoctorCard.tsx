@@ -13,7 +13,7 @@ const DoctorCard = ({ doctor }: DoctorCardProps) => {
     <div className="medical-card flex flex-col h-full">
       <div className="mb-4 overflow-hidden rounded-md">
         <img
-          src={doctor.imageUrl}
+          src={doctor.imageurl} // Changed from imageUrl to imageurl
           alt={doctor.name}
           className="w-full h-48 object-cover transition-transform hover:scale-105"
         />

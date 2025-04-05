@@ -3,7 +3,7 @@ export interface Doctor {
   id: string;
   name: string;
   specialization: string;
-  imageUrl: string;
+  imageurl: string; // Changed from imageUrl to match the database field name
   experience: number;
   rating: number;
   education: string;
@@ -23,7 +23,7 @@ export interface TimeSlot {
   id: string;
   time: string;
   date: string;
-  isBooked: boolean;
+  is_booked: boolean; // Changed from isBooked to match the database field name
   doctor_id?: string;
 }
 
@@ -33,7 +33,7 @@ export interface Appointment {
   patientId: string;
   date: string;
   timeSlot: string;
-  status: 'scheduled' | 'completed' | 'cancelled';
+  status: string; // Changed from union type to string to match what the database returns
   followUp?: boolean;
   notes?: string;
 }
@@ -54,7 +54,7 @@ export const mockDoctors: Doctor[] = [
     id: "1",
     name: "Dr. Sarah Khan",
     specialization: "Cardiologist",
-    imageUrl: "/placeholder.svg",
+    imageurl: "/placeholder.svg", // Changed from imageUrl to imageurl
     experience: 8,
     rating: 4.8,
     education: "MBBS, MD - Cardiology",
@@ -64,7 +64,7 @@ export const mockDoctors: Doctor[] = [
     id: "2",
     name: "Dr. Rahul Patel",
     specialization: "Gastrologist",
-    imageUrl: "/placeholder.svg",
+    imageurl: "/placeholder.svg", // Changed from imageUrl to imageurl
     experience: 10,
     rating: 4.9,
     education: "MBBS, MD - Gastroenterology",
@@ -74,7 +74,7 @@ export const mockDoctors: Doctor[] = [
     id: "3",
     name: "Dr. Aisha Rahman",
     specialization: "Neurologist",
-    imageUrl: "/placeholder.svg",
+    imageurl: "/placeholder.svg", // Changed from imageUrl to imageurl
     experience: 12,
     rating: 4.7,
     education: "MBBS, MD - Neurology",
@@ -84,7 +84,7 @@ export const mockDoctors: Doctor[] = [
     id: "4",
     name: "Dr. Mahfuz Ahmed",
     specialization: "Orthopedic",
-    imageUrl: "/placeholder.svg",
+    imageurl: "/placeholder.svg", // Changed from imageUrl to imageurl
     experience: 15,
     rating: 4.9,
     education: "MBBS, MS - Orthopedics",
@@ -94,7 +94,7 @@ export const mockDoctors: Doctor[] = [
     id: "5",
     name: "Dr. Fatima Begum",
     specialization: "Pediatrician",
-    imageUrl: "/placeholder.svg",
+    imageurl: "/placeholder.svg", // Changed from imageUrl to imageurl
     experience: 7,
     rating: 4.8,
     education: "MBBS, MD - Pediatrics",
@@ -104,7 +104,7 @@ export const mockDoctors: Doctor[] = [
     id: "6",
     name: "Dr. Mohammad Hossain",
     specialization: "General Medicine",
-    imageUrl: "/placeholder.svg",
+    imageurl: "/placeholder.svg", // Changed from imageUrl to imageurl
     experience: 9,
     rating: 4.6,
     education: "MBBS, MD - Internal Medicine",
@@ -121,6 +121,6 @@ export const mockTimeSlots: TimeSlot[] = Array(20).fill(0).map((_, index) => {
     id: `slot-${index + 1}`,
     time,
     date: new Date().toISOString().split('T')[0],
-    isBooked: Math.random() > 0.7 // Randomly set some slots as booked
+    is_booked: Math.random() > 0.7 // Changed from isBooked to is_booked
   };
 });

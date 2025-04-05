@@ -75,7 +75,19 @@ const DoctorDetails = () => {
           throw error;
         }
         
-        setDoctor(data);
+        // Map the database response to our Doctor type
+        const doctorData: Doctor = {
+          id: data.id,
+          name: data.name,
+          specialization: data.specialization,
+          imageurl: data.imageurl, // Field name now matches database
+          experience: data.experience,
+          rating: data.rating,
+          education: data.education,
+          about: data.about
+        };
+        
+        setDoctor(doctorData);
       } catch (error) {
         console.error("Error fetching doctor:", error);
         toast({
@@ -286,7 +298,7 @@ const DoctorDetails = () => {
             <div className="w-full md:w-1/3">
               <div className="rounded-lg overflow-hidden bg-white shadow-md">
                 <img 
-                  src={doctor.imageUrl} 
+                  src={doctor.imageurl} // Changed from imageUrl to imageurl
                   alt={doctor.name}
                   className="w-full h-64 object-cover object-center" 
                 />
