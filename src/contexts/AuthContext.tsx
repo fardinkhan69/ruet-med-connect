@@ -1,7 +1,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { supabase } from "@/integrations/supabase/client";
-import { Session, User } from '@supabase/supabase-js';
+import { Session, User, Provider } from '@supabase/supabase-js';
 
 interface AuthContextType {
   session: Session | null;
@@ -10,6 +10,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, userData: any) => Promise<{ error: any }>;
   signOut: () => Promise<{ error: any }>;
+  signInWithGoogle: () => Promise<{ error: any }>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -19,6 +20,7 @@ const AuthContext = createContext<AuthContextType>({
   signIn: async () => ({ error: null }),
   signUp: async () => ({ error: null }),
   signOut: async () => ({ error: null }),
+  signInWithGoogle: async () => ({ error: null }),
 });
 
 export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
@@ -108,6 +110,26 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
       return { error };
     }
   };
+  
+  const signInWithGoogle = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin
+        }
+      });
+      if (error) {
+        console.error('Google sign in error:', error);
+      } else {
+        console.log('Google sign in initiated');
+      }
+      return { error };
+    } catch (error) {
+      console.error('Unexpected Google sign in error:', error);
+      return { error };
+    }
+  };
 
   const value = {
     session,
@@ -116,6 +138,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
     signIn,
     signUp,
     signOut,
+    signInWithGoogle,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
