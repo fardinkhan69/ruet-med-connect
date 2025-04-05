@@ -20,6 +20,14 @@ import {
   AlertCircle
 } from "lucide-react";
 
+interface DbTimeSlot {
+  id: string;
+  time: string;
+  date: string;
+  is_booked: boolean;
+  doctor_id: string;
+}
+
 const DoctorDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -28,7 +36,7 @@ const DoctorDetails = () => {
   const [doctor, setDoctor] = useState<Doctor | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
+  const [timeSlots, setTimeSlots] = useState<DbTimeSlot[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [reason, setReason] = useState("");
@@ -59,7 +67,7 @@ const DoctorDetails = () => {
         
         const { data, error } = await supabase
           .from("doctors")
-          .select()
+          .select("*")
           .eq("id", id)
           .single();
           
@@ -94,7 +102,7 @@ const DoctorDetails = () => {
         
         const { data, error } = await supabase
           .from("time_slots")
-          .select()
+          .select("*")
           .eq("doctor_id", id)
           .eq("date", formattedDate)
           .order("time", { ascending: true });

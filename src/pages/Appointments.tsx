@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -79,8 +78,8 @@ const Appointments = () => {
           .from("appointments")
           .select(`
             *,
-            doctor:doctor_id(*),
-            time_slot:time_slot_id(*)
+            doctor:doctor_id (id, name, specialization, imageUrl),
+            time_slot:time_slot_id (id, date, time)
           `)
           .eq("patient_id", user.id)
           .order("created_at", { ascending: false });

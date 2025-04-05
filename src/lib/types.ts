@@ -22,7 +22,9 @@ export interface Patient {
 export interface TimeSlot {
   id: string;
   time: string;
+  date: string;
   isBooked: boolean;
+  doctor_id?: string;
 }
 
 export interface Appointment {
@@ -118,6 +120,7 @@ export const mockTimeSlots: TimeSlot[] = Array(20).fill(0).map((_, index) => {
   return {
     id: `slot-${index + 1}`,
     time,
+    date: new Date().toISOString().split('T')[0],
     isBooked: Math.random() > 0.7 // Randomly set some slots as booked
   };
 });
