@@ -19,6 +19,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import { mockDoctors } from "@/lib/types";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface DbTimeSlot {
   id: string;
@@ -32,6 +33,7 @@ const DoctorDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   
   const [doctor, setDoctor] = useState<Doctor | null>(null);
   const [loading, setLoading] = useState(true);
@@ -40,25 +42,7 @@ const DoctorDetails = () => {
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [reason, setReason] = useState("");
-  const [user, setUser] = useState<any>(null);
   const [bookingInProgress, setBookingInProgress] = useState(false);
-
-  useEffect(() => {
-    const checkSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      setUser(data.session?.user || null);
-    };
-    
-    checkSession();
-    
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user || null);
-    });
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, []);
 
   useEffect(() => {
     const fetchDoctor = async () => {
@@ -235,6 +219,14 @@ const DoctorDetails = () => {
         return;
       }
       
+      console.log("Booking appointment with real data:", {
+        doctor_id: id,
+        time_slot_id: selectedSlot,
+        patient_id: user.id,
+        reason: reason
+      });
+      
+      // Update time slot first
       const { error: timeSlotError } = await supabase
         .from("time_slots")
         .update({ is_booked: true })
@@ -244,6 +236,7 @@ const DoctorDetails = () => {
         throw timeSlotError;
       }
 
+      // Then create appointment
       const { error: appointmentError } = await supabase
         .from("appointments")
         .insert({
@@ -252,6 +245,7 @@ const DoctorDetails = () => {
           time_slot_id: selectedSlot,
           reason,
           status: "scheduled",
+          follow_up: false
         });
 
       if (appointmentError) {

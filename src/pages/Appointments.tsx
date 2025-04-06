@@ -1,13 +1,12 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Calendar,
   Clock,
@@ -31,12 +30,11 @@ import {
   TabsTrigger
 } from "@/components/ui/tabs";
 
-// Updated interfaces to match database structure
 interface Doctor {
   id: string;
   name: string;
   specialization: string;
-  imageurl: string; // Changed from imageUrl to match database
+  imageurl: string;
 }
 
 interface TimeSlot {
@@ -50,7 +48,7 @@ interface Appointment {
   patient_id: string;
   doctor_id: string;
   time_slot_id: string;
-  status: string; // Changed from union type to string
+  status: string;
   reason: string;
   notes?: string;
   follow_up: boolean;
@@ -76,6 +74,8 @@ const Appointments = () => {
     
     const fetchAppointments = async () => {
       try {
+        console.log("Fetching appointments for user:", user.id);
+        
         const { data, error } = await supabase
           .from("appointments")
           .select(`
@@ -83,13 +83,14 @@ const Appointments = () => {
             doctor:doctor_id (id, name, specialization, imageurl),
             time_slot:time_slot_id (id, date, time)
           `)
-          .eq("patient_id", user.id)
-          .order("created_at", { ascending: false });
+          .eq("patient_id", user.id);
         
         if (error) {
+          console.error("Error details:", error);
           throw error;
         }
         
+        console.log("Appointments fetched:", data);
         setAppointments(data || []);
       } catch (err) {
         console.error("Error fetching appointments:", err);
@@ -104,7 +105,6 @@ const Appointments = () => {
   
   const cancelAppointment = async (appointment: Appointment) => {
     try {
-      // Update appointment status
       const { error: appointmentError } = await supabase
         .from("appointments")
         .update({ status: "cancelled" })
@@ -114,7 +114,6 @@ const Appointments = () => {
         throw appointmentError;
       }
       
-      // Update time slot booking status
       const { error: timeSlotError } = await supabase
         .from("time_slots")
         .update({ is_booked: false })
@@ -124,7 +123,6 @@ const Appointments = () => {
         throw timeSlotError;
       }
       
-      // Update local state
       setAppointments(appointments.map(app => 
         app.id === appointment.id 
           ? { ...app, status: "cancelled" } 
