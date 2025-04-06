@@ -32,3 +32,19 @@ export const supabase = createClient<Database>(
     }
   }
 );
+
+// Test function to verify Supabase connection
+export const testSupabaseConnection = async () => {
+  try {
+    const { data, error } = await supabase.from('doctors').select('*').limit(1);
+    if (error) {
+      console.error('Supabase connection test failed:', error);
+      return { success: false, error };
+    }
+    console.log('Supabase connection test succeeded:', data);
+    return { success: true, data };
+  } catch (err) {
+    console.error('Unexpected error testing Supabase connection:', err);
+    return { success: false, error: err };
+  }
+};

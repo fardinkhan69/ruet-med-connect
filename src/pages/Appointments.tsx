@@ -19,24 +19,43 @@ import { useEffect } from "react";
 import AppointmentCard from "@/components/appointments/AppointmentCard";
 import EmptyState from "@/components/appointments/EmptyState";
 import { useAppointments } from "@/hooks/useAppointments";
+import { supabase } from "@/integrations/supabase/client";
 
 const Appointments = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  
+  useEffect(() => {
+    // Test Supabase connection on page load
+    const testConnection = async () => {
+      try {
+        const { data, error } = await supabase.from('doctors').select('*').limit(1);
+        console.log("Connection test on Appointments page:", { data, error });
+      } catch (err) {
+        console.error("Connection test error:", err);
+      }
+    };
+    
+    testConnection();
+  }, []);
   
   const {
     upcomingAppointments,
     pastAppointments,
     loading,
     error,
-    cancelAppointment
+    cancelAppointment,
+    refetch
   } = useAppointments(user?.id);
   
   useEffect(() => {
     if (!user) {
       navigate("/login", { state: { from: "/appointments" } });
+    } else {
+      // Force a refetch when the component mounts and we have a user
+      refetch();
     }
-  }, [user, navigate]);
+  }, [user, navigate, refetch]);
   
   if (!user) {
     return null;

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Loader2 } from "lucide-react";
 
 interface BookingFormProps {
   doctorId: string;
@@ -73,14 +74,17 @@ const BookingForm = ({
         return;
       }
       
-      console.log("Booking appointment with real data:", {
+      // Prepare appointment data
+      const appointmentData = {
+        patient_id: userId,
         doctor_id: doctorId,
         time_slot_id: selectedSlot,
-        patient_id: userId,
         reason: reason,
         status: "scheduled",
         follow_up: false
-      });
+      };
+      
+      console.log("Booking appointment with data:", appointmentData);
       
       // First update the time slot
       const { error: timeSlotError } = await supabase
@@ -93,18 +97,7 @@ const BookingForm = ({
         throw timeSlotError;
       }
 
-      // Then create the appointment
-      const appointmentData = {
-        patient_id: userId,
-        doctor_id: doctorId,
-        time_slot_id: selectedSlot,
-        reason: reason,
-        status: "scheduled",
-        follow_up: false
-      };
-      
-      console.log("Inserting appointment data:", appointmentData);
-      
+      // Then insert the appointment
       const { data: appointmentResult, error: appointmentError } = await supabase
         .from("appointments")
         .insert(appointmentData)
@@ -126,11 +119,11 @@ const BookingForm = ({
       onSuccess();
       navigate("/appointments");
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error booking appointment:", error);
       toast({
         title: "Booking Failed",
-        description: "There was an error booking your appointment. Please try again.",
+        description: error?.message || "There was an error booking your appointment. Please try again.",
         variant: "destructive",
       });
       setBookingInProgress(false);
@@ -152,7 +145,14 @@ const BookingForm = ({
         disabled={!selectedSlot || !reason.trim() || bookingInProgress}
         className="w-full mt-4"
       >
-        {bookingInProgress ? "Booking..." : "Book Appointment"}
+        {bookingInProgress ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Booking...
+          </>
+        ) : (
+          "Book Appointment"
+        )}
       </Button>
     </>
   );

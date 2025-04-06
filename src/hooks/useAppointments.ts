@@ -45,26 +45,30 @@ export const useAppointments = (userId: string | undefined) => {
     try {
       console.log("Fetching appointments for user:", userId);
       
+      // Test the Supabase connection first
+      const connectionTest = await testSupabaseConnection();
+      console.log("Supabase connection test:", connectionTest);
+      
       const { data, error } = await supabase
         .from("appointments")
         .select(`
           *,
-          doctor:doctor_id (id, name, specialization, imageurl),
-          time_slot:time_slot_id (id, date, time)
+          doctor:doctor_id (*),
+          time_slot:time_slot_id (*)
         `)
         .eq("patient_id", userId)
         .order("created_at", { ascending: false });
       
       if (error) {
-        console.error("Error details:", error);
+        console.error("Error fetching appointments:", error);
         throw error;
       }
       
       console.log("Appointments fetched:", data);
       setAppointments(data || []);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error fetching appointments:", err);
-      setError("Failed to load appointments. Please try again.");
+      setError(err?.message || "Failed to load appointments. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -112,11 +116,11 @@ export const useAppointments = (userId: string | undefined) => {
       });
       
       return true;
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error cancelling appointment:", err);
       toast({
         title: "Error",
-        description: "Failed to cancel appointment. Please try again.",
+        description: err?.message || "Failed to cancel appointment. Please try again.",
         variant: "destructive"
       });
       
@@ -144,4 +148,20 @@ export const useAppointments = (userId: string | undefined) => {
     cancelAppointment,
     refetch: fetchAppointments
   };
+};
+
+// Helper function to test Supabase connection
+const testSupabaseConnection = async () => {
+  try {
+    const { data, error } = await supabase.from('doctors').select('*').limit(1);
+    if (error) {
+      console.error('Supabase connection test failed:', error);
+      return { success: false, error };
+    }
+    console.log('Supabase connection test succeeded:', data);
+    return { success: true, data };
+  } catch (err) {
+    console.error('Unexpected error testing Supabase connection:', err);
+    return { success: false, error: err };
+  }
 };
