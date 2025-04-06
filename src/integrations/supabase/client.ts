@@ -17,6 +17,18 @@ export const supabase = createClient<Database>(
       persistSession: true,
       autoRefreshToken: true,
       storageKey: 'docapp-auth-token',
+      detectSessionInUrl: true,
+      flowType: 'implicit'
     },
+    realtime: {
+      params: {
+        eventsPerSecond: 10
+      }
+    },
+    global: {
+      headers: {
+        'x-application-name': 'doctor-appointment-app'
+      }
+    }
   }
 );
