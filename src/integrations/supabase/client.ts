@@ -33,6 +33,24 @@ export const supabase = createClient<Database>(
   }
 );
 
+// More detailed logging for debugging
+export const logSupabaseOperation = async (operation: string, promise: Promise<any>) => {
+  try {
+    console.log(`Starting Supabase operation: ${operation}`);
+    const result = await promise;
+    console.log(`Supabase ${operation} result:`, result);
+    
+    if (result.error) {
+      console.error(`Supabase ${operation} error:`, result.error);
+    }
+    
+    return result;
+  } catch (err) {
+    console.error(`Unexpected error in Supabase ${operation}:`, err);
+    throw err;
+  }
+};
+
 // Test function to verify Supabase connection
 export const testSupabaseConnection = async () => {
   try {

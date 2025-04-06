@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, logSupabaseOperation } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 
 interface BookingFormProps {
@@ -87,28 +87,34 @@ const BookingForm = ({
       console.log("Booking appointment with data:", appointmentData);
       
       // First update the time slot
-      const { error: timeSlotError } = await supabase
-        .from("time_slots")
-        .update({ is_booked: true })
-        .eq("id", selectedSlot);
+      const timeSlotUpdate = await logSupabaseOperation(
+        "time_slot update", 
+        supabase
+          .from("time_slots")
+          .update({ is_booked: true })
+          .eq("id", selectedSlot)
+      );
 
-      if (timeSlotError) {
-        console.error("Time slot update error:", timeSlotError);
-        throw timeSlotError;
+      if (timeSlotUpdate.error) {
+        console.error("Time slot update error:", timeSlotUpdate.error);
+        throw timeSlotUpdate.error;
       }
 
-      // Then insert the appointment
-      const { data: appointmentResult, error: appointmentError } = await supabase
-        .from("appointments")
-        .insert(appointmentData)
-        .select();
+      // Then insert the appointment with improved error handling
+      const appointmentInsert = await logSupabaseOperation(
+        "appointment insert",
+        supabase
+          .from("appointments")
+          .insert([appointmentData])
+          .select()
+      );
 
-      if (appointmentError) {
-        console.error("Appointment creation error:", appointmentError);
-        throw appointmentError;
+      if (appointmentInsert.error) {
+        console.error("Appointment creation error:", appointmentInsert.error);
+        throw appointmentInsert.error;
       }
       
-      console.log("Appointment created successfully:", appointmentResult);
+      console.log("Appointment created successfully:", appointmentInsert.data);
 
       toast({
         title: "Success!",

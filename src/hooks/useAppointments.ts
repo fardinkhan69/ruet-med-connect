@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, logSupabaseOperation } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 interface Doctor {
@@ -46,26 +46,34 @@ export const useAppointments = (userId: string | undefined) => {
       console.log("Fetching appointments for user:", userId);
       
       // Test the Supabase connection first
-      const connectionTest = await testSupabaseConnection();
-      console.log("Supabase connection test:", connectionTest);
+      const connectionTest = await logSupabaseOperation(
+        "connection test", 
+        supabase.from('doctors').select('*').limit(1)
+      );
       
-      const { data, error } = await supabase
-        .from("appointments")
-        .select(`
-          *,
-          doctor:doctor_id (*),
-          time_slot:time_slot_id (*)
-        `)
-        .eq("patient_id", userId)
-        .order("created_at", { ascending: false });
+      // Detailed logging for appointment fetch
+      console.log("Starting appointment fetch for user:", userId);
       
-      if (error) {
-        console.error("Error fetching appointments:", error);
-        throw error;
+      const appointmentResult = await logSupabaseOperation(
+        "appointments fetch",
+        supabase
+          .from("appointments")
+          .select(`
+            *,
+            doctor:doctor_id (*),
+            time_slot:time_slot_id (*)
+          `)
+          .eq("patient_id", userId)
+          .order("created_at", { ascending: false })
+      );
+      
+      if (appointmentResult.error) {
+        console.error("Error fetching appointments:", appointmentResult.error);
+        throw appointmentResult.error;
       }
       
-      console.log("Appointments fetched:", data);
-      setAppointments(data || []);
+      console.log("Appointments fetched:", appointmentResult.data);
+      setAppointments(appointmentResult.data || []);
     } catch (err: any) {
       console.error("Error fetching appointments:", err);
       setError(err?.message || "Failed to load appointments. Please try again.");
@@ -86,22 +94,28 @@ export const useAppointments = (userId: string | undefined) => {
         throw new Error("Appointment not found");
       }
       
-      const { error: appointmentError } = await supabase
-        .from("appointments")
-        .update({ status: "cancelled" })
-        .eq("id", appointmentId);
+      const appointmentUpdate = await logSupabaseOperation(
+        "appointment status update",
+        supabase
+          .from("appointments")
+          .update({ status: "cancelled" })
+          .eq("id", appointmentId)
+      );
       
-      if (appointmentError) {
-        throw appointmentError;
+      if (appointmentUpdate.error) {
+        throw appointmentUpdate.error;
       }
       
-      const { error: timeSlotError } = await supabase
-        .from("time_slots")
-        .update({ is_booked: false })
-        .eq("id", appointment.time_slot_id);
+      const timeSlotUpdate = await logSupabaseOperation(
+        "time slot update for cancellation",
+        supabase
+          .from("time_slots")
+          .update({ is_booked: false })
+          .eq("id", appointment.time_slot_id)
+      );
       
-      if (timeSlotError) {
-        throw timeSlotError;
+      if (timeSlotUpdate.error) {
+        throw timeSlotUpdate.error;
       }
       
       setAppointments(appointments.map(app => 
@@ -148,20 +162,4 @@ export const useAppointments = (userId: string | undefined) => {
     cancelAppointment,
     refetch: fetchAppointments
   };
-};
-
-// Helper function to test Supabase connection
-const testSupabaseConnection = async () => {
-  try {
-    const { data, error } = await supabase.from('doctors').select('*').limit(1);
-    if (error) {
-      console.error('Supabase connection test failed:', error);
-      return { success: false, error };
-    }
-    console.log('Supabase connection test succeeded:', data);
-    return { success: true, data };
-  } catch (err) {
-    console.error('Unexpected error testing Supabase connection:', err);
-    return { success: false, error: err };
-  }
 };
