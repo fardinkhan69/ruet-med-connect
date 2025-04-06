@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -83,7 +84,8 @@ const Appointments = () => {
             doctor:doctor_id (id, name, specialization, imageurl),
             time_slot:time_slot_id (id, date, time)
           `)
-          .eq("patient_id", user.id);
+          .eq("patient_id", user.id)
+          .order("created_at", { ascending: false });
         
         if (error) {
           console.error("Error details:", error);

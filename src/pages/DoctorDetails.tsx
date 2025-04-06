@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -200,6 +201,7 @@ const DoctorDetails = () => {
     setBookingInProgress(true);
 
     try {
+      // If using mock doctor data
       if (/^\d+$/.test(id)) {
         await new Promise(resolve => setTimeout(resolve, 1000));
         
@@ -223,34 +225,45 @@ const DoctorDetails = () => {
         doctor_id: id,
         time_slot_id: selectedSlot,
         patient_id: user.id,
-        reason: reason
+        reason: reason,
+        status: "scheduled",
+        follow_up: false
       });
       
-      // Update time slot first
+      // First update the time slot
       const { error: timeSlotError } = await supabase
         .from("time_slots")
         .update({ is_booked: true })
         .eq("id", selectedSlot);
 
       if (timeSlotError) {
+        console.error("Time slot update error:", timeSlotError);
         throw timeSlotError;
       }
 
-      // Then create appointment
-      const { error: appointmentError } = await supabase
+      // Then create the appointment
+      const appointmentData = {
+        patient_id: user.id,
+        doctor_id: id,
+        time_slot_id: selectedSlot,
+        reason: reason,
+        status: "scheduled",
+        follow_up: false
+      };
+      
+      console.log("Inserting appointment data:", appointmentData);
+      
+      const { data: appointmentResult, error: appointmentError } = await supabase
         .from("appointments")
-        .insert({
-          patient_id: user.id,
-          doctor_id: id,
-          time_slot_id: selectedSlot,
-          reason,
-          status: "scheduled",
-          follow_up: false
-        });
+        .insert(appointmentData)
+        .select();
 
       if (appointmentError) {
+        console.error("Appointment creation error:", appointmentError);
         throw appointmentError;
       }
+      
+      console.log("Appointment created successfully:", appointmentResult);
 
       toast({
         title: "Success!",
