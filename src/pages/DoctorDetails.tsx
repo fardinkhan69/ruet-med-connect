@@ -1,7 +1,6 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, logSupabaseOperation } from "@/integrations/supabase/client";
 import { Doctor } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -98,37 +97,59 @@ const DoctorDetails = () => {
         const formattedDate = selectedDate.toISOString().split('T')[0];
         
         if (/^\d+$/.test(id)) {
+          const { data: existingSlots, error: checkError } = await supabase
+            .from("time_slots")
+            .select("*")
+            .eq("doctor_id", id)
+            .eq("date", formattedDate);
+            
+          if (checkError) {
+            throw checkError;
+          }
+          
+          if (existingSlots && existingSlots.length > 0) {
+            setTimeSlots(existingSlots);
+            setSlotsLoading(false);
+            return;
+          }
+          
           const mockSlots = Array(8).fill(0).map((_, index) => {
             const hour = Math.floor(index / 2) + 9;
             const minute = (index % 2) === 0 ? '00' : '30';
             const time = `${hour}:${minute}`;
             
             return {
-              id: `slot-${index + 1}`,
-              time,
               date: formattedDate,
-              is_booked: Math.random() > 0.7,
-              doctor_id: id
+              time,
+              doctor_id: id,
+              is_booked: false
             };
           });
           
-          setTimeSlots(mockSlots);
-          setSlotsLoading(false);
-          return;
-        }
-        
-        const { data, error } = await supabase
-          .from("time_slots")
-          .select("*")
-          .eq("doctor_id", id)
-          .eq("date", formattedDate)
-          .order("time", { ascending: true });
+          const { data: insertedSlots, error: insertError } = await supabase
+            .from("time_slots")
+            .insert(mockSlots)
+            .select();
+            
+          if (insertError) {
+            throw insertError;
+          }
           
-        if (error) {
-          throw error;
+          setTimeSlots(insertedSlots || []);
+        } else {
+          const { data, error } = await supabase
+            .from("time_slots")
+            .select("*")
+            .eq("doctor_id", id)
+            .eq("date", formattedDate)
+            .order("time", { ascending: true });
+            
+          if (error) {
+            throw error;
+          }
+          
+          setTimeSlots(data || []);
         }
-        
-        setTimeSlots(data || []);
       } catch (error) {
         console.error("Error fetching time slots:", error);
         toast({
