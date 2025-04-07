@@ -1,5 +1,5 @@
 
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { Calendar, Clock, FileText, CheckCircle, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -22,6 +22,8 @@ interface AppointmentProps {
   id: string;
   doctor?: Doctor;
   time_slot?: TimeSlot;
+  start_time?: string;
+  end_time?: string;
   status: string;
   reason: string;
   notes?: string;
@@ -32,6 +34,8 @@ const AppointmentCard = ({
   id,
   doctor,
   time_slot,
+  start_time,
+  end_time,
   status,
   reason,
   notes,
@@ -40,13 +44,39 @@ const AppointmentCard = ({
   const navigate = useNavigate();
   
   const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("en-US", { 
-      weekday: "short", 
-      year: "numeric", 
-      month: "short", 
-      day: "numeric" 
-    });
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString("en-US", { 
+        weekday: "short", 
+        year: "numeric", 
+        month: "short", 
+        day: "numeric" 
+      });
+    } catch (error) {
+      console.error("Date formatting error:", error);
+      return "Invalid date";
+    }
+  };
+  
+  const formatTime = (timeStr: string) => {
+    try {
+      if (timeStr.includes('T')) {
+        // Handle ISO format from start_time/end_time
+        return new Date(timeStr).toLocaleTimeString([], {
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      } else {
+        // Handle time-only format from time_slot
+        return new Date(`2000-01-01T${timeStr}`).toLocaleTimeString([], {
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      }
+    } catch (error) {
+      console.error("Time formatting error:", error);
+      return "Invalid time";
+    }
   };
   
   const renderStatusBadge = (status: string) => {
@@ -77,7 +107,20 @@ const AppointmentCard = ({
     }
   };
   
-  const isPast = time_slot && new Date(time_slot.date + " " + time_slot.time) <= new Date();
+  // Determine if appointment is in the past
+  const isPast = () => {
+    const now = new Date();
+    
+    if (start_time) {
+      // Use start_time when available
+      return new Date(start_time) <= now;
+    } else if (time_slot) {
+      // Fall back to time_slot
+      return new Date(time_slot.date + " " + time_slot.time) <= now;
+    }
+    
+    return false;
+  };
   
   return (
     <Card>
@@ -99,18 +142,15 @@ const AppointmentCard = ({
                 <div className="flex items-center text-sm text-gray-600">
                   <Calendar className="w-4 h-4 mr-1" />
                   <span>
-                    {time_slot?.date && formatDate(time_slot.date)}
+                    {start_time ? formatDate(start_time) : 
+                     (time_slot?.date ? formatDate(time_slot.date) : "N/A")}
                   </span>
                 </div>
                 <div className="flex items-center text-sm text-gray-600">
                   <Clock className="w-4 h-4 mr-1" />
                   <span>
-                    {time_slot?.time && 
-                      new Date(`2000-01-01T${time_slot.time}`).toLocaleTimeString([], {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })
-                    }
+                    {start_time ? formatTime(start_time) : 
+                     (time_slot?.time ? formatTime(time_slot.time) : "N/A")}
                   </span>
                 </div>
               </div>
@@ -121,7 +161,7 @@ const AppointmentCard = ({
             {renderStatusBadge(status)}
             
             <div className="mt-3 flex space-x-2">
-              {!isPast && status === "scheduled" && onCancel && (
+              {!isPast() && status === "scheduled" && onCancel && (
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -130,7 +170,7 @@ const AppointmentCard = ({
                   Cancel
                 </Button>
               )}
-              {isPast ? (
+              {isPast() ? (
                 <Button 
                   variant="outline" 
                   size="sm" 

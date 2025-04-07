@@ -13,11 +13,13 @@ export type Database = {
         Row: {
           created_at: string
           doctor_id: string
+          end_time: string | null
           follow_up: boolean
           id: string
           notes: string | null
           patient_id: string
           reason: string
+          start_time: string | null
           status: string
           time_slot_id: string
           updated_at: string
@@ -25,11 +27,13 @@ export type Database = {
         Insert: {
           created_at?: string
           doctor_id: string
+          end_time?: string | null
           follow_up?: boolean
           id?: string
           notes?: string | null
           patient_id: string
           reason: string
+          start_time?: string | null
           status?: string
           time_slot_id: string
           updated_at?: string
@@ -37,11 +41,13 @@ export type Database = {
         Update: {
           created_at?: string
           doctor_id?: string
+          end_time?: string | null
           follow_up?: boolean
           id?: string
           notes?: string | null
           patient_id?: string
           reason?: string
+          start_time?: string | null
           status?: string
           time_slot_id?: string
           updated_at?: string

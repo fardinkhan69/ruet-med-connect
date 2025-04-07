@@ -26,6 +26,8 @@ interface Appointment {
   notes?: string;
   follow_up: boolean;
   created_at: string;
+  start_time?: string;
+  end_time?: string;
   doctor?: Doctor;
   time_slot?: TimeSlot;
 }
@@ -72,7 +74,7 @@ export const useAppointments = (userId: string | undefined) => {
             time_slot:time_slot_id (*)
           `)
           .eq("patient_id", userId)
-          .order("created_at", { ascending: false })
+          .order("start_time", { ascending: false })
       );
       
       if (appointmentResult.error) {
@@ -150,16 +152,36 @@ export const useAppointments = (userId: string | undefined) => {
     }
   };
   
-  const upcomingAppointments = appointments.filter(
-    app => app.status === "scheduled" && 
-    app.time_slot && new Date(app.time_slot.date + " " + app.time_slot.time) > new Date()
-  );
+  // Updated to use start_time when available, otherwise fall back to time_slot
+  const upcomingAppointments = appointments.filter(app => {
+    if (app.status !== "scheduled") return false;
+    
+    const now = new Date();
+    
+    // Use start_time if available
+    if (app.start_time) {
+      return new Date(app.start_time) > now;
+    }
+    
+    // Fall back to time_slot if start_time is not available
+    return app.time_slot && new Date(app.time_slot.date + " " + app.time_slot.time) > now;
+  });
   
-  const pastAppointments = appointments.filter(
-    app => app.status === "completed" || 
-    app.status === "cancelled" || 
-    (app.time_slot && new Date(app.time_slot.date + " " + app.time_slot.time) <= new Date())
-  );
+  // Updated to use start_time when available, otherwise fall back to time_slot
+  const pastAppointments = appointments.filter(app => {
+    if (app.status === "cancelled") return true;
+    if (app.status === "completed") return true;
+    
+    const now = new Date();
+    
+    // Use start_time if available
+    if (app.start_time) {
+      return new Date(app.start_time) <= now;
+    }
+    
+    // Fall back to time_slot if start_time is not available
+    return app.time_slot && new Date(app.time_slot.date + " " + app.time_slot.time) <= now;
+  });
   
   return {
     appointments,

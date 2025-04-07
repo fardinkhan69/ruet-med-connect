@@ -35,7 +35,7 @@ export const supabase = createClient<Database>(
 
 /**
  * Enhanced logging function for Supabase operations
- * Accepts any type of query, including Supabase builder objects and Promises
+ * Now properly handles Supabase query builders which are not actual Promises
  */
 export const logSupabaseOperation = async <T>(operation: string, query: any): Promise<T> => {
   try {

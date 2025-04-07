@@ -82,6 +82,8 @@ const BookingForm = ({
         reason: reason,
         status: "scheduled",
         follow_up: false
+        // We don't need to set start_time or end_time,
+        // they will be calculated automatically by the trigger
       };
       
       console.log("Booking appointment with data:", appointmentData);

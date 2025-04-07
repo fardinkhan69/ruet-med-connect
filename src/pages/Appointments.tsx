@@ -137,6 +137,8 @@ const Appointments = () => {
                         id={appointment.id}
                         doctor={appointment.doctor}
                         time_slot={appointment.time_slot}
+                        start_time={appointment.start_time}
+                        end_time={appointment.end_time}
                         status={appointment.status}
                         reason={appointment.reason}
                         notes={appointment.notes}
@@ -162,6 +164,8 @@ const Appointments = () => {
                         id={appointment.id}
                         doctor={appointment.doctor}
                         time_slot={appointment.time_slot}
+                        start_time={appointment.start_time}
+                        end_time={appointment.end_time}
                         status={appointment.status}
                         reason={appointment.reason}
                         notes={appointment.notes}

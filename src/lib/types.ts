@@ -29,13 +29,18 @@ export interface TimeSlot {
 
 export interface Appointment {
   id: string;
-  doctorId: string;
-  patientId: string;
-  date: string;
-  timeSlot: string;
-  status: string; // Changed from union type to string to match what the database returns
-  followUp?: boolean;
+  doctor_id: string;
+  patient_id: string;
+  time_slot_id: string;
+  status: string; 
+  reason: string;
+  follow_up?: boolean;
   notes?: string;
+  start_time?: string;
+  end_time?: string;
+  created_at: string;
+  doctor?: Doctor;
+  time_slot?: TimeSlot;
 }
 
 export type Specialization = 
