@@ -33,17 +33,33 @@ export const supabase = createClient<Database>(
   }
 );
 
-// More detailed logging for debugging
-// The updated function accepts both Promises and Supabase query objects
-export const logSupabaseOperation = async (operation: string, query: any) => {
+/**
+ * Enhanced logging function for Supabase operations
+ * Accepts any type of query, including Supabase builder objects and Promises
+ */
+export const logSupabaseOperation = async <T>(operation: string, query: any): Promise<T> => {
   try {
     console.log(`Starting Supabase operation: ${operation}`);
     
-    // Execute the query - works with both Promise objects and Supabase query builders
-    const result = await query;
+    // Execute the query
+    let result;
+    
+    // Handle both Promise objects and Supabase query builders
+    if (query instanceof Promise) {
+      result = await query;
+    } else if (query && typeof query.then === 'function') {
+      // For Supabase query builders which are "thenable" but not actual Promises
+      result = await query;
+    } else if (query && typeof query === 'object') {
+      // Handle direct objects
+      result = query;
+    } else {
+      throw new Error(`Invalid query object for operation: ${operation}`);
+    }
+    
     console.log(`Supabase ${operation} result:`, result);
     
-    if (result.error) {
+    if (result?.error) {
       console.error(`Supabase ${operation} error:`, result.error);
     }
     

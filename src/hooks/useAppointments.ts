@@ -44,17 +44,25 @@ export const useAppointments = (userId: string | undefined) => {
     
     try {
       console.log("Fetching appointments for user:", userId);
+      setLoading(true);
+      setError("");
       
       // Test the Supabase connection first
-      const connectionTest = await logSupabaseOperation(
+      const connectionTest = await logSupabaseOperation<any>(
         "connection test", 
         supabase.from('doctors').select('*').limit(1)
       );
       
+      if (connectionTest.error) {
+        console.error("Supabase connection test failed:", connectionTest.error);
+      } else {
+        console.log("Supabase connection test successful!");
+      }
+      
       // Detailed logging for appointment fetch
       console.log("Starting appointment fetch for user:", userId);
       
-      const appointmentResult = await logSupabaseOperation(
+      const appointmentResult = await logSupabaseOperation<any>(
         "appointments fetch",
         supabase
           .from("appointments")
@@ -94,7 +102,7 @@ export const useAppointments = (userId: string | undefined) => {
         throw new Error("Appointment not found");
       }
       
-      const appointmentUpdate = await logSupabaseOperation(
+      const appointmentUpdate = await logSupabaseOperation<any>(
         "appointment status update",
         supabase
           .from("appointments")
@@ -106,7 +114,7 @@ export const useAppointments = (userId: string | undefined) => {
         throw appointmentUpdate.error;
       }
       
-      const timeSlotUpdate = await logSupabaseOperation(
+      const timeSlotUpdate = await logSupabaseOperation<any>(
         "time slot update for cancellation",
         supabase
           .from("time_slots")

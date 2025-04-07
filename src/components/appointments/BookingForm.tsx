@@ -59,7 +59,7 @@ const BookingForm = ({
     setBookingInProgress(true);
 
     try {
-      // If using mock doctor data
+      // Mock data handling for demo mode
       if (/^\d+$/.test(doctorId)) {
         await new Promise(resolve => setTimeout(resolve, 1000));
         
@@ -87,7 +87,7 @@ const BookingForm = ({
       console.log("Booking appointment with data:", appointmentData);
       
       // First update the time slot
-      const timeSlotUpdate = await logSupabaseOperation(
+      const timeSlotUpdate = await logSupabaseOperation<any>(
         "time_slot update", 
         supabase
           .from("time_slots")
@@ -100,8 +100,8 @@ const BookingForm = ({
         throw timeSlotUpdate.error;
       }
 
-      // Then insert the appointment with improved error handling
-      const appointmentInsert = await logSupabaseOperation(
+      // Then insert the appointment
+      const appointmentInsert = await logSupabaseOperation<any>(
         "appointment insert",
         supabase
           .from("appointments")
