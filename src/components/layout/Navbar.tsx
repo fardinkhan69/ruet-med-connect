@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -103,11 +102,18 @@ const Navbar = () => {
                   Login
                 </Button>
               </Link>
-              <Link to="/register">
-                <Button className="bg-primary text-white hover:bg-primary/90">
-                  Register
-                </Button>
-              </Link>
+              <div className="flex space-x-2">
+                <Link to="/register">
+                  <Button className="bg-primary text-white hover:bg-primary/90">
+                    Register
+                  </Button>
+                </Link>
+                <Link to="/doctor-register">
+                  <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-white">
+                    Register as Doctor
+                  </Button>
+                </Link>
+              </div>
             </>
           )}
         </div>
@@ -183,6 +189,11 @@ const Navbar = () => {
                   <Link to="/register" onClick={toggleMenu}>
                     <Button className="bg-primary text-white hover:bg-primary/90 w-full">
                       Register
+                    </Button>
+                  </Link>
+                  <Link to="/doctor-register" onClick={toggleMenu}>
+                    <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-white w-full">
+                      Register as Doctor
                     </Button>
                   </Link>
                 </>

@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,6 +7,7 @@ import { AuthContextProvider, useAuth } from "./contexts/AuthContext";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import DoctorRegister from "./pages/DoctorRegister";
 import Appointments from "./pages/Appointments";
 import DoctorDashboard from "./pages/DoctorDashboard";
 import DoctorDetails from "./pages/DoctorDetails";
@@ -22,7 +22,6 @@ const queryClient = new QueryClient({
   },
 });
 
-// Protected route wrapper component
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
   const { user, loading } = useAuth();
   
@@ -43,6 +42,7 @@ const AppRoutes = () => {
       <Route path="/" element={<Index />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/doctor-register" element={<DoctorRegister />} />
       <Route 
         path="/appointments" 
         element={

@@ -11,6 +11,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, userData: any) => Promise<{ error: any }>;
   signOut: () => Promise<{ error: any }>;
   signInWithGoogle: () => Promise<{ error: any }>;
+  isDoctor: () => boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -21,6 +22,7 @@ const AuthContext = createContext<AuthContextType>({
   signUp: async () => ({ error: null }),
   signOut: async () => ({ error: null }),
   signInWithGoogle: async () => ({ error: null }),
+  isDoctor: () => false,
 });
 
 export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
@@ -130,6 +132,11 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
       return { error };
     }
   };
+  
+  // Helper function to check if the current user is a doctor
+  const isDoctor = (): boolean => {
+    return !!user?.user_metadata?.doctor;
+  };
 
   const value = {
     session,
@@ -139,6 +146,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
     signUp,
     signOut,
     signInWithGoogle,
+    isDoctor,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
