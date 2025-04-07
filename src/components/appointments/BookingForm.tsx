@@ -13,6 +13,7 @@ interface BookingFormProps {
   setReason: (reason: string) => void;
   userId: string | undefined;
   onSuccess: () => void;
+  isMockSlot?: boolean;
 }
 
 const BookingForm = ({
@@ -22,6 +23,7 @@ const BookingForm = ({
   setReason,
   userId,
   onSuccess,
+  isMockSlot = false,
 }: BookingFormProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -59,7 +61,22 @@ const BookingForm = ({
     setBookingInProgress(true);
 
     try {
-      // Prepare appointment data
+      // Handle mock slots differently
+      if (isMockSlot) {
+        // For mock slots, just simulate a successful booking
+        setTimeout(() => {
+          toast({
+            title: "Success!",
+            description: "Your appointment has been booked successfully (demo)",
+          });
+          setBookingInProgress(false);
+          onSuccess();
+          navigate("/appointments");
+        }, 1000);
+        return;
+      }
+
+      // Prepare appointment data for real slots
       const appointmentData = {
         patient_id: userId,
         doctor_id: doctorId,
@@ -67,7 +84,6 @@ const BookingForm = ({
         reason: reason,
         status: "scheduled",
         follow_up: false
-        // start_time and end_time will be calculated automatically by the trigger
       };
       
       console.log("Booking appointment with data:", appointmentData);
@@ -110,7 +126,6 @@ const BookingForm = ({
       setBookingInProgress(false);
       onSuccess();
       navigate("/appointments");
-
     } catch (error: any) {
       console.error("Error booking appointment:", error);
       toast({

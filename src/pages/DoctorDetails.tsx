@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase, logSupabaseOperation } from "@/integrations/supabase/client";
@@ -35,16 +36,19 @@ const DoctorDetails = () => {
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [reason, setReason] = useState("");
+  const [isMockDoctor, setIsMockDoctor] = useState(false);
 
   useEffect(() => {
     const fetchDoctor = async () => {
       try {
         if (!id) return;
         
+        // Check if this is a mock doctor ID
         if (/^\d+$/.test(id)) {
           const mockDoctorIndex = parseInt(id) - 1;
           if (mockDoctorIndex >= 0 && mockDoctorIndex < mockDoctors.length) {
             setDoctor(mockDoctors[mockDoctorIndex]);
+            setIsMockDoctor(true);
             setLoading(false);
             return;
           }
@@ -96,60 +100,42 @@ const DoctorDetails = () => {
       try {
         const formattedDate = selectedDate.toISOString().split('T')[0];
         
-        if (/^\d+$/.test(id)) {
-          const { data: existingSlots, error: checkError } = await supabase
-            .from("time_slots")
-            .select("*")
-            .eq("doctor_id", id)
-            .eq("date", formattedDate);
-            
-          if (checkError) {
-            throw checkError;
-          }
-          
-          if (existingSlots && existingSlots.length > 0) {
-            setTimeSlots(existingSlots);
-            setSlotsLoading(false);
-            return;
-          }
-          
+        // Handle mock doctors differently - create mock slots in memory
+        if (isMockDoctor) {
+          // Create mock time slots without database interaction for mock doctors
           const mockSlots = Array(8).fill(0).map((_, index) => {
             const hour = Math.floor(index / 2) + 9;
             const minute = (index % 2) === 0 ? '00' : '30';
             const time = `${hour}:${minute}`;
+            const slotId = `mock-slot-${id}-${formattedDate}-${time}`;
             
             return {
+              id: slotId,
               date: formattedDate,
               time,
               doctor_id: id,
-              is_booked: false
+              is_booked: Math.random() > 0.7 // Random availability
             };
           });
           
-          const { data: insertedSlots, error: insertError } = await supabase
-            .from("time_slots")
-            .insert(mockSlots)
-            .select();
-            
-          if (insertError) {
-            throw insertError;
-          }
-          
-          setTimeSlots(insertedSlots || []);
-        } else {
-          const { data, error } = await supabase
-            .from("time_slots")
-            .select("*")
-            .eq("doctor_id", id)
-            .eq("date", formattedDate)
-            .order("time", { ascending: true });
-            
-          if (error) {
-            throw error;
-          }
-          
-          setTimeSlots(data || []);
+          setTimeSlots(mockSlots);
+          setSlotsLoading(false);
+          return;
         }
+        
+        // For real doctors, get slots from the database
+        const { data, error } = await supabase
+          .from("time_slots")
+          .select("*")
+          .eq("doctor_id", id)
+          .eq("date", formattedDate)
+          .order("time", { ascending: true });
+          
+        if (error) {
+          throw error;
+        }
+        
+        setTimeSlots(data || []);
       } catch (error) {
         console.error("Error fetching time slots:", error);
         toast({
@@ -163,7 +149,7 @@ const DoctorDetails = () => {
     };
 
     fetchTimeSlots();
-  }, [selectedDate, id, toast]);
+  }, [selectedDate, id, toast, isMockDoctor]);
 
   const handleDateChange = (date: Date | undefined) => {
     setSelectedDate(date);
@@ -259,6 +245,7 @@ const DoctorDetails = () => {
                 setReason={setReason}
                 userId={user?.id}
                 onSuccess={handleBookingSuccess}
+                isMockSlot={isMockDoctor}
               />
             </div>
           </div>
