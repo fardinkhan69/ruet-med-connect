@@ -18,10 +18,10 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   user: null,
   loading: true,
-  signIn: async () => ({ error: null }),
-  signUp: async () => ({ error: null }),
-  signOut: async () => ({ error: null }),
-  signInWithGoogle: async () => ({ error: null }),
+  signIn: async () => ({ error: null }) as { error: any },
+  signUp: async () => ({ error: null }) as { error: any },
+  signOut: async () => ({ error: null }) as { error: any },
+  signInWithGoogle: async () => ({ error: null }) as { error: any },
   isDoctor: () => false,
 });
 
