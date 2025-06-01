@@ -38,22 +38,34 @@ const DoctorDetails = () => {
   const [reason, setReason] = useState("");
   const [isMockDoctor, setIsMockDoctor] = useState(false);
 
+  // Helper function to check if ID is a mock doctor ID
+  const isMockDoctorId = (doctorId: string): boolean => {
+    return /^\d+$/.test(doctorId);
+  };
+
   useEffect(() => {
     const fetchDoctor = async () => {
       try {
         if (!id) return;
         
-        // Check if this is a mock doctor ID
-        if (/^\d+$/.test(id)) {
+        console.log("Fetching doctor with ID:", id);
+        
+        // Check if this is a mock doctor ID (numeric)
+        if (isMockDoctorId(id)) {
+          console.log("Detected mock doctor ID:", id);
           const mockDoctorIndex = parseInt(id) - 1;
           if (mockDoctorIndex >= 0 && mockDoctorIndex < mockDoctors.length) {
             setDoctor(mockDoctors[mockDoctorIndex]);
             setIsMockDoctor(true);
             setLoading(false);
             return;
+          } else {
+            throw new Error("Mock doctor not found");
           }
         }
         
+        // For real doctors (UUID format), fetch from database
+        console.log("Fetching real doctor from database with UUID:", id);
         const { data, error } = await supabase
           .from("doctors")
           .select("*")
@@ -61,6 +73,7 @@ const DoctorDetails = () => {
           .single();
           
         if (error) {
+          console.error("Database error fetching doctor:", error);
           throw error;
         }
         
@@ -76,6 +89,7 @@ const DoctorDetails = () => {
         };
         
         setDoctor(doctorData);
+        setIsMockDoctor(false);
       } catch (error) {
         console.error("Error fetching doctor:", error);
         toast({
@@ -99,9 +113,11 @@ const DoctorDetails = () => {
       
       try {
         const formattedDate = selectedDate.toISOString().split('T')[0];
+        console.log("Fetching time slots for date:", formattedDate, "and doctor:", id);
         
-        // Handle mock doctors differently - create mock slots in memory
-        if (isMockDoctor) {
+        // Handle mock doctors - create mock slots in memory only
+        if (isMockDoctorId(id)) {
+          console.log("Creating mock time slots for mock doctor");
           // Create mock time slots without database interaction for mock doctors
           const mockSlots = Array(8).fill(0).map((_, index) => {
             const hour = Math.floor(index / 2) + 9;
@@ -123,7 +139,8 @@ const DoctorDetails = () => {
           return;
         }
         
-        // For real doctors, get slots from the database
+        // For real doctors (UUID), get slots from the database
+        console.log("Fetching real time slots from database");
         const { data, error } = await supabase
           .from("time_slots")
           .select("*")
@@ -132,9 +149,11 @@ const DoctorDetails = () => {
           .order("time", { ascending: true });
           
         if (error) {
+          console.error("Database error fetching time slots:", error);
           throw error;
         }
         
+        console.log("Real time slots fetched:", data);
         setTimeSlots(data || []);
       } catch (error) {
         console.error("Error fetching time slots:", error);
@@ -149,7 +168,7 @@ const DoctorDetails = () => {
     };
 
     fetchTimeSlots();
-  }, [selectedDate, id, toast, isMockDoctor]);
+  }, [selectedDate, id, toast]);
 
   const handleDateChange = (date: Date | undefined) => {
     setSelectedDate(date);
@@ -161,10 +180,31 @@ const DoctorDetails = () => {
   };
 
   const handleBookingSuccess = () => {
-    const updatedTimeSlots = timeSlots.map(slot => 
-      slot.id === selectedSlot ? { ...slot, is_booked: true } : slot
-    );
-    setTimeSlots(updatedTimeSlots);
+    // For mock doctors, just update the UI
+    if (isMockDoctorId(id || '')) {
+      const updatedTimeSlots = timeSlots.map(slot => 
+        slot.id === selectedSlot ? { ...slot, is_booked: true } : slot
+      );
+      setTimeSlots(updatedTimeSlots);
+    } else {
+      // For real doctors, refetch time slots to get updated data
+      const fetchUpdatedSlots = async () => {
+        if (!selectedDate || !id) return;
+        
+        const formattedDate = selectedDate.toISOString().split('T')[0];
+        const { data } = await supabase
+          .from("time_slots")
+          .select("*")
+          .eq("doctor_id", id)
+          .eq("date", formattedDate)
+          .order("time", { ascending: true });
+          
+        setTimeSlots(data || []);
+      };
+      
+      fetchUpdatedSlots();
+    }
+    
     setSelectedSlot(null);
     setReason("");
   };
