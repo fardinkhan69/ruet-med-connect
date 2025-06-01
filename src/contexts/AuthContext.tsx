@@ -62,7 +62,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string): Promise<{ error: any }> => {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
@@ -77,7 +77,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const signUp = async (email: string, password: string, userData: any) => {
+  const signUp = async (email: string, password: string, userData: any): Promise<{ error: any }> => {
     try {
       const { error } = await supabase.auth.signUp({
         email,
@@ -98,7 +98,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const signOut = async () => {
+  const signOut = async (): Promise<{ error: any }> => {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) {
@@ -113,7 +113,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
     }
   };
   
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (): Promise<{ error: any }> => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
